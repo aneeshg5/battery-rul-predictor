@@ -72,3 +72,29 @@ Phase 2 — Data Pipeline
 
 ### Next Phase
 Phase 3 — Models
+
+## Phase 3 — Models — COMPLETE
+
+**Date:** 2026-06-17
+
+### What Was Built
+- `src/battery_rul/models/dnn.py` — `PaperDNN` (exact replica: Linear->ReLU->Linear->
+  Sigmoid->Linear, sized from `config.HIDDEN_LAYERS`) and `UpgradedDNN` (configurable
+  depth/width, Linear->BatchNorm1d->ReLU->Dropout per layer, residual add when a block's
+  input/output dims match)
+- `src/battery_rul/models/lstm.py` — `BatteryLSTM` (2-layer LSTM, hidden=64, dropout=0.2,
+  Linear(64,1) head over the final timestep)
+- `tests/test_models.py` — forward-pass shapes for all three models, residual-path shape
+  check, parameter-count sanity bounds
+
+### Results / Metrics
+- `pytest` (9 tests total), `ruff`, `black`, `mypy` all pass clean
+
+### Issues Encountered
+- Initial `UpgradedDNN` used `nn.ModuleDict` blocks inside an `nn.ModuleList`; mypy
+  couldn't infer dict-style indexing on a generic `nn.Module`. Refactored to four
+  parallel `nn.ModuleList`s (linears/norms/dropouts) iterated with `zip(..., strict=True)`
+  — cleaner and fully typed.
+
+### Next Phase
+Phase 4 — Training, Tuning & Evaluation
