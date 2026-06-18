@@ -1,7 +1,7 @@
-# Battery RUL Predictor
+# Battery Remaining Useful Life Predictor
 
-> Predicting State of Health and Remaining Useful Life of Li-ion batteries using
-> deep learning and gradient-boosted trees — based on published SRA 2023 research.
+> Predicts Remaining Useful Life (RUL) and State of Health (SOH) for Li-ion batteries
+> using deep learning and gradient-boosted trees.
 
 ![Python 3.11](https://img.shields.io/badge/python-3.11%2B-blue)
 ![PyTorch](https://img.shields.io/badge/PyTorch-2.2-EE4C2C)
@@ -11,18 +11,19 @@
 
 ## Why This Matters
 
-Battery health prediction is mission-critical wherever cells can't be casually
-swapped out — Tesla's BMS fleet telemetry, SpaceX's satellite and launch-vehicle power
-systems, and EV powertrains at Rivian, Lucid, BMW, and Waymo all depend on knowing a
-cell's remaining useful life before it fails. This project rebuilds a published SRA
-2023 paper's approach from scratch with production-quality engineering, then tests
-whether more sophisticated models actually do better — they don't, and that result is
-itself the interesting finding (see [Results](#results)).
+Remaining Useful Life (RUL) is how much usable life a battery has left before it
+needs replacing. Knowing it matters wherever cells can't be swapped out casually,
+like battery management system, fleet telemetry, satellite and launch vehicle
+power systems, and EV powertrains. All of which depend on accurate health estimates.
+
+This project reimplements my SRA 2023 paper's approach to predicting battery
+State of Health (SOH), then tests whether more sophisticated models actually improve
+on it. See Results below.
 
 ## Results
 
-Cross-battery generalization (Approach 2: train on RW9, predict RW10/RW11/RW12) —
-average RMSE across the three held-out batteries:
+Cross-battery generalization (Approach 2: train on RW9, predict RW10/RW11/RW12).
+Average RMSE across the three held-out batteries:
 
 | Model                 | Avg RMSE (Approach 2) |
 |------------------------|------------------------|
@@ -35,39 +36,13 @@ average RMSE across the three held-out batteries:
 | BLS-RVM (original)     | 1.55%                  |
 | RNN + LSTM (original)  | 1.61%                  |
 
-All six of our models beat every published baseline. The more interesting result is
-*within* our own models: the exact paper-replica DNN — 2 hidden layers, no batch norm,
-no dropout, no attention — beats every upgrade we threw at it, including a Transformer
-encoder. LightGBM operating on the same per-row engineered features (rolling
-mean/std, dv/dt) comes a close second. That points to the engineered features already
-carrying the temporal signal that matters, with the bottleneck being the
-data/feature relationship rather than model capacity — see `CHECKPOINTS.md` Phase 7
-for the full investigation.
-
-## Architecture
-
-```
-NASA RW9-RW12 (.mat)
-        │
-        ▼
-preprocess.py  ──► SOH calculation, rolling/derivative features, min-max scaling
-        │
-        ▼
-data/processed/*.parquet
-        │
-        ├──► PyTorch models (paper_dnn, upgraded_dnn, lstm, attention)
-        │        via Trainer + MLflow tracking + Optuna tuning
-        │
-        └──► LightGBM (tree_trainer.py)
-                 via mlflow.lightgbm
-
-        │
-        ▼
-precompute_predictions.py ──► data/processed/predictions/*.parquet
-        │
-        ├──► Plotly Dash dashboard (scripts/serve.py)
-        └──► FastAPI inference endpoint (uvicorn battery_rul.inference.api:app)
-```
+All six models beat every published baseline. The interesting result is within
+our own models where the exact paper-replica DNN, with 2 hidden layers and no batch norm,
+dropout, or attention, beats every upgrade we tried, including a Transformer encoder.
+LightGBM, using the same per-row engineered features (rolling mean/std, dv/dt), comes
+close second. This suggests the engineered features already carry the temporal
+signal that matters, and the bottleneck is the data/feature relationship, not model
+capacity. See `CHECKPOINTS.md` Phase 7 for the full investigation.
 
 ## Quick Start
 
@@ -90,29 +65,22 @@ python scripts/serve.py                                  # http://localhost:8050
 Select a battery, model, and approach to see live voltage traces, an SOH gauge,
 SOH-over-time, training curves, and a full model comparison table.
 
-## Project Structure
+## Architecture and Project Structure
 
 ```
-battery-rul-predictor/
-├── src/battery_rul/
-│   ├── data/            # download, preprocess, PyTorch Dataset
-│   ├── models/           # paper_dnn, upgraded_dnn, lstm, attention, lightgbm
-│   ├── training/         # Trainer, Optuna tuning, LightGBM trainer
-│   ├── evaluation/       # RMSE/MAE/R2, safety-ratio metrics, prediction precompute
-│   ├── inference/         # Predictor + FastAPI app
-│   └── dashboard/        # Plotly Dash app
-├── notebooks/             # EDA and model-comparison notebooks
-├── scripts/               # CLI entry points (download, train, tune, serve)
-├── tests/                 # pytest suite
-└── CHECKPOINTS.md          # full phase-by-phase engineering log
+src/battery_rul/
+├── data/         NASA RW9-RW12 (.mat) ──► preprocess.py ──► data/processed/*.parquet
+├── models/       paper_dnn, upgraded_dnn, lstm, attention, lightgbm
+├── training/     Trainer (MLflow + Optuna) for the torch models, tree_trainer.py for LightGBM
+├── evaluation/   metrics.py + precompute_predictions.py ──► data/processed/predictions/*.parquet
+├── inference/    Predictor + FastAPI app (uvicorn battery_rul.inference.api:app)
+└── dashboard/    Plotly Dash app (scripts/serve.py)
+
+notebooks/        EDA and model-comparison notebooks
+scripts/          CLI entry points (download, train, tune, serve)
+tests/            pytest suite
+CHECKPOINTS.md    full phase-by-phase engineering log
 ```
 
-## Paper Reference
-
-Chen, Ganti, Matsumura. "Predicting the Remaining Useful Life of
-Lithium-Ion Batteries Using Machine Learning Techniques." SRA 2023.
-Full transcription: [`docs/paper_transcription.md`](docs/paper_transcription.md).
-
-## Author
-
-Aneesh Ganti — [GitHub](https://github.com/aneeshg5)
+See [`docs/architecture.md`](docs/architecture.md) for the data pipeline, model and
+training design decisions, and API rationale in detail.
