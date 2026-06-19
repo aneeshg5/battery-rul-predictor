@@ -37,7 +37,7 @@ dev = [
 ]
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/battery_rul"]
+packages = ["battery_rul"]
 
 [tool.black]
 line-length = 100

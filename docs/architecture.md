@@ -3,8 +3,8 @@
 ## Data Pipeline
 
 1. **`data/download.py`** pulls the four NASA RW9-RW12 `.mat` files (the dataset ships
-   as MATLAB structs, not flat CSVs — see `CHANGELOG.md` Phase 2) into `data/raw/`,
-   with checksum verification so re-runs skip re-downloading.
+   as MATLAB structs, not flat CSVs) into `data/raw/`, with checksum verification so
+   re-runs skip re-downloading.
 2. **`data/preprocess.py`** parses each battery's step records, classifies each step
    as charge/discharge/rest, computes SOH via `(V_i - V_f) / (V_0 - V_f)` (paper
    formula, `V_f = SOH_THRESHOLD * V_0`), and adds engineered features:
@@ -36,13 +36,13 @@ that fits directly on flat per-row `FEATURE_COLUMNS` (no windowing: the rolling/
 features already encode short-term history per row) and logs to MLflow via
 `mlflow.lightgbm.log_model`.
 
-Phase 7 added `lightgbm` and `attention` specifically to test why `upgraded_dnn`
-underperformed the simpler `paper_dnn` (see `CHANGELOG.md` Phase 7): one model with
-no access to sequence order at all, one built specifically to learn temporal structure
-itself rather than relying on hand-engineered rolling windows. Neither beat `paper_dnn`,
-which is the central finding of this project — for this dataset, the engineered
-per-row features already carry the predictive signal, so additional model capacity
-or architectural sophistication doesn't help.
+`lightgbm` and `attention` were added specifically to test why `upgraded_dnn`
+underperformed the simpler `paper_dnn`: one model with no access to sequence order
+at all, one built specifically to learn temporal structure itself rather than relying
+on hand-engineered rolling windows. Neither beat `paper_dnn`, which is the central
+finding of this project — for this dataset, the engineered per-row features already
+carry the predictive signal, so additional model capacity or architectural
+sophistication doesn't help.
 
 ## Training Methodology
 

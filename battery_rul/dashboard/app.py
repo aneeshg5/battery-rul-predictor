@@ -229,8 +229,8 @@ def update_charts(
         return empty, empty, empty, empty
     df = load_predictions(model, approach, battery)
     latest_soh_percent = float(df["soh_predicted"].iloc[-1] * 100)
-    # SOH from the quantile-based formula can fall outside [0, 100] on noisy samples
-    # (see CHANGELOG.md Phase 2); clamp only the gauge display, not the line charts.
+    # SOH from the quantile-based formula can fall outside [0, 100] on noisy samples;
+    # clamp only the gauge display, not the line charts.
     gauge_percent = min(max(latest_soh_percent, 0.0), 100.0)
     if model in MODELS_WITHOUT_TRAINING_CURVE:
         training_curve_figure = go.Figure().update_layout(

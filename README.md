@@ -41,7 +41,7 @@ dropout, or attention, beats every upgrade we tried, including a Transformer enc
 LightGBM, using the same per-row engineered features (rolling mean/std, dv/dt), comes
 close second. This suggests the engineered features already carry the temporal
 signal that matters, and the bottleneck is the data/feature relationship, not model
-capacity. See `CHANGELOG.md` Phase 7 for the full investigation.
+capacity.
 
 ## Quick Start
 
@@ -67,7 +67,7 @@ SOH-over-time, training curves, and a full model comparison table.
 ## Architecture and Project Structure
 
 ```
-src/battery_rul/
+battery_rul/
 ├── data/         NASA RW9-RW12 (.mat) ──► preprocess.py ──► data/processed/*.parquet
 ├── models/       paper_dnn, upgraded_dnn, lstm, attention, lightgbm
 ├── training/     Trainer (MLflow + Optuna) for the torch models, tree_trainer.py for LightGBM
@@ -78,7 +78,6 @@ src/battery_rul/
 notebooks/        EDA and model-comparison notebooks
 scripts/          CLI entry points (download, train, tune, serve)
 tests/            pytest suite
-CHANGELOG.md      full phase-by-phase engineering log
 ```
 
 See [`docs/architecture.md`](docs/architecture.md) for the data pipeline, model and
