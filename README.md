@@ -41,7 +41,7 @@ dropout, or attention, beats every upgrade we tried, including a Transformer enc
 LightGBM, using the same per-row engineered features (rolling mean/std, dv/dt), comes
 close second. This suggests the engineered features already carry the temporal
 signal that matters, and the bottleneck is the data/feature relationship, not model
-capacity. See `CHECKPOINTS.md` Phase 7 for the full investigation.
+capacity. See `CHANGELOG.md` Phase 7 for the full investigation.
 
 ## Quick Start
 
@@ -78,7 +78,7 @@ src/battery_rul/
 notebooks/        EDA and model-comparison notebooks
 scripts/          CLI entry points (download, train, tune, serve)
 tests/            pytest suite
-CHECKPOINTS.md    full phase-by-phase engineering log
+CHANGELOG.md      full phase-by-phase engineering log
 ```
 
 See [`docs/architecture.md`](docs/architecture.md) for the data pipeline, model and

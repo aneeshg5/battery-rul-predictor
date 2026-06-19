@@ -3,7 +3,7 @@
 ## Data Pipeline
 
 1. **`data/download.py`** pulls the four NASA RW9-RW12 `.mat` files (the dataset ships
-   as MATLAB structs, not flat CSVs — see `CHECKPOINTS.md` Phase 2) into `data/raw/`,
+   as MATLAB structs, not flat CSVs — see `CHANGELOG.md` Phase 2) into `data/raw/`,
    with checksum verification so re-runs skip re-downloading.
 2. **`data/preprocess.py`** parses each battery's step records, classifies each step
    as charge/discharge/rest, computes SOH via `(V_i - V_f) / (V_0 - V_f)` (paper
@@ -37,7 +37,7 @@ features already encode short-term history per row) and logs to MLflow via
 `mlflow.lightgbm.log_model`.
 
 Phase 7 added `lightgbm` and `attention` specifically to test why `upgraded_dnn`
-underperformed the simpler `paper_dnn` (see `CHECKPOINTS.md` Phase 7): one model with
+underperformed the simpler `paper_dnn` (see `CHANGELOG.md` Phase 7): one model with
 no access to sequence order at all, one built specifically to learn temporal structure
 itself rather than relying on hand-engineered rolling windows. Neither beat `paper_dnn`,
 which is the central finding of this project — for this dataset, the engineered

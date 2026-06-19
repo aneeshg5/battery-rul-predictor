@@ -18,7 +18,7 @@ Phase 1 — Project Scaffold & Environment
 **Date:** 2026-06-17
 
 ### What Was Built
-- Full directory layout per Section 3 (`src/battery_rul/*`, `tests/`, `scripts/`, `notebooks/`, `data/`)
+- Full directory layout (`src/battery_rul/*`, `tests/`, `scripts/`, `notebooks/`, `data/`)
 - `pyproject.toml` with runtime + dev dependencies, ruff/black/mypy/pytest config
 - `src/battery_rul/config.py` with paths and baseline hyperparameters
 - `.github/workflows/ci.yml` running ruff, black, mypy, pytest on push/PR to main
@@ -56,7 +56,7 @@ Phase 2 — Data Pipeline
 - `pytest`, `ruff`, `black`, `mypy` all pass clean
 
 ### Issues Encountered
-- CLAUDE.md assumed the dataset was served as flat CSVs via a Socrata API at
+- The original plan assumed the dataset was served as flat CSVs via a Socrata API at
   `data.nasa.gov/Raw-Data/.../ugxu-9kjx`. That URL 404s — data.nasa.gov runs CKAN, not
   Socrata, and the actual files are MATLAB `.mat` structs (one per battery, each a list
   of ~113k "step" records with nested per-step arrays) inside a single zip at
@@ -135,12 +135,12 @@ dropout: 0.015, batch_size: 256}`, saved to `data/processed/best_params.json`.
 
 ### Issues Encountered
 - **Compute-scope decision (user-approved):** a full-spec run of all 4 training configs
-  plus a 50-trial Optuna search was estimated at ~13-14 hours on this machine. User chose
-  the reduced-scope option: `paper_dnn` and `upgraded_dnn` train on the full dataset;
+  plus a 50-trial Optuna search was estimated at ~13-14 hours on this machine. Chose
+  the reduced-scope option instead: `paper_dnn` and `upgraded_dnn` train on the full dataset;
   `lstm` (approach 2) uses `stride=5` window subsampling; Optuna uses `stride=10` and
-  `n_trials=15` instead of 50. This is a compute-driven deviation from CLAUDE.md Section 6
-  Phase 4, not a methodology change — `BatteryDataset` gained a `stride` parameter that
-  only thins which windows are sampled, the windows themselves are unchanged.
+  `n_trials=15` instead of 50. This is a compute-driven deviation from the original
+  Phase 4 plan, not a methodology change — `BatteryDataset` gained a `stride` parameter
+  that only thins which windows are sampled, the windows themselves are unchanged.
 - **Real bug found via first training pass, not assumed correct:** the initial Approach-2
   run (all 3 models) produced ~31-32% average RMSE across every model — same magnitude
   regardless of architecture, which pointed at the data pipeline rather than the models.
@@ -205,12 +205,12 @@ Phase 5 — Interactive Dashboard
   comparison-table highlighting both verified visually
 
 ### Issues Encountered
-- **Voltage-vs-predicted overlay isn't possible as literally specified**: CLAUDE.md's
-  Phase 5 spec describes a "Voltage vs Time trace (actual + predicted overlay)," but every
-  model in this project predicts SOH, not voltage — there is no predicted-voltage series to
-  overlay. Adapted to the models' actual output: the voltage panel shows the real
-  (unscaled) actual trace only, and the actual-vs-predicted overlay was moved to the SOH
-  panel, which is the quantity the models actually predict.
+- **Voltage-vs-predicted overlay isn't possible as literally specified**: the original
+  Phase 5 plan described a "Voltage vs Time trace (actual + predicted overlay)," but
+  every model in this project predicts SOH, not voltage — there is no predicted-voltage
+  series to overlay. Adapted to the models' actual output: the voltage panel shows the
+  real (unscaled) actual trace only, and the actual-vs-predicted overlay was moved to the
+  SOH panel, which is the quantity the models actually predict.
 - **SOH gauge clamping was needed, as flagged back in Phase 2**: the quantile-based SOH
   formula can produce values outside [0, 1] on noisy samples (confirmed live — RW12's
   raw predicted SOH hit -6.6% at one selected point). The gauge display is clamped to
@@ -270,7 +270,7 @@ Phase 6 — FastAPI Inference Endpoint
   `confidence="high"`
 
 ### Issues Encountered
-- CLAUDE.md's spec only defines RUL buckets for SOH < 85% ("Replace soon") and > 90%
+- The original spec only defines RUL buckets for SOH < 85% ("Replace soon") and > 90%
   ("Healthy"), leaving 85-90% undefined. Filled the gap with a "Monitor" bucket — simplest
   reasonable choice for the unspecified middle range.
 - The model only ever sees the last single timestep's 9 features at inference (`Trainer`'s
@@ -292,9 +292,9 @@ Phase 7 — Advanced Model Comparison (LightGBM + Attention)
 - `src/battery_rul/models/attention.py` — `BatteryAttention`: input projection, learned
   positional embedding, 2 `nn.TransformerEncoderLayer` blocks, head on the final timestep.
   Same `(batch, seq_len, features) -> (batch, 1)` contract as `BatteryLSTM`, so it plugs
-  into `Trainer`'s existing `input_mode="sequence"` path unchanged — this fulfills the
-  Section 5 "lightweight self-attention over voltage history window" upgrade that was
-  listed but never implemented in Phases 1-6
+  into `Trainer`'s existing `input_mode="sequence"` path unchanged — this fulfills a
+  lightweight self-attention upgrade over the voltage history window that had been
+  planned but never implemented in Phases 1-6
 - `src/battery_rul/training/tree_trainer.py` — `fit_lightgbm`, a non-epoch training path
   for tree models that logs params + per-battery RMSE/MAE/R2 to MLflow via
   `mlflow.lightgbm.log_model`
@@ -385,7 +385,7 @@ Phase 8 — EDA Notebooks
 - `pytest` (25 tests), `ruff`, `black`, `mypy` all pass clean
 
 ### Issues Encountered
-- CLAUDE.md's Phase 8 spec says "load all 4 battery raw CSVs," but the raw data is
+- The original Phase 8 plan said "load all 4 battery raw CSVs," but the raw data is
   `.mat` (see Phase 2) and the processed parquets already carry preserved unscaled
   `voltage_raw`/`absolute_time_raw` columns alongside the engineered features — loaded
   from `data/processed/*.parquet` instead, consistent with the dashboard's data source
@@ -412,7 +412,7 @@ Phase 9 — README & Final Polish
   methodology, and API design rationale
 
 ### Results / Metrics
-- README results table deviates from CLAUDE.md's original template (which only listed
+- README results table deviates from the original template (which only listed
   3 published baselines + 3 blank "ours" rows) — used the full 8-row sorted comparison
   from `02_model_comparison.ipynb` instead, since it surfaces the actual headline result
   (paper_dnn replica at 0.66% beats every model and baseline, including its own
@@ -421,7 +421,7 @@ Phase 9 — README & Final Polish
 
 ### Issues Encountered
 - None blocking; the only deviation is the results-table format noted above, logged per
-  CLAUDE.md Section 12 rule 5 (simplest reasonable choice, logged, continue)
+  this project's deviation-logging convention (simplest reasonable choice, logged, continue)
 
 ### Next Phase
 None — v1.0.0 portfolio release.
