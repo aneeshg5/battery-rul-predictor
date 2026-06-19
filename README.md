@@ -1,7 +1,6 @@
 # Battery Remaining Useful Life Predictor
 
-> Predicts Remaining Useful Life (RUL) and State of Health (SOH) for Li-ion batteries
-> using deep learning and gradient-boosted trees.
+> Predicts Remaining Useful Life and State of Health for Li-ion batteries using deep learning.
 
 ![Python 3.11](https://img.shields.io/badge/python-3.11%2B-blue)
 ![PyTorch](https://img.shields.io/badge/PyTorch-2.2-EE4C2C)
